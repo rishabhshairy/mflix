@@ -19,6 +19,8 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
 
 import mflix.api.models.Session;
 import mflix.api.models.User;
@@ -158,6 +160,12 @@ public class UserDao extends AbstractMFlixDao {
 		// be updated.
 		// TODO > Ticket: Handling Errors - make this method more robust by
 		// handling potential exceptions when updating an entry.
-		return false;
+		Bson queryBson = Filters.eq("email", email);
+		Document updateDocument = new Document();
+		for (String key: userPreferences.keySet()) {
+			updateDocument.put(key, userPreferences.get(key).toString());
+		}
+		usersCollection.updateOne(queryBson, Updates.set("preferences", updateDocument), new UpdateOptions().upsert(true));
+		return true;
 	}
 }
