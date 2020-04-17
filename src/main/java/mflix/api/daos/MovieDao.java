@@ -1,6 +1,7 @@
 package mflix.api.daos;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -74,6 +75,17 @@ public class MovieDao extends AbstractMFlixDao {
 		// TODO> Ticket: Get Comments - implement the lookup stage that allows the
 		// comments to
 		// retrieved with Movies.
+		pipeline.addAll(
+				Arrays.asList(new Document("$lookup",
+						new Document("from", "comments")
+								.append("pipeline",
+										Arrays.asList(
+												new Document("$match",
+														new Document("$expr",
+																new Document("$eq",
+																		Arrays.asList("$movie_id", "$$id")))),
+												new Document("$sort", new Document("date", -1L))))
+								.append("as", "comments").append("let", new Document("id", "$_id")))));
 		Document movie = moviesCollection.aggregate(pipeline).first();
 
 		return movie;
@@ -184,7 +196,7 @@ public class MovieDao extends AbstractMFlixDao {
 		Bson castFilter = Filters.in("genres", genres);
 		// sort key
 		Bson sort = Sorts.descending(sortKey);
-		
+
 //		Bson limitStage = Aggregates.limit(limit);
 //		Bson skipStage  = Aggregates.skip(skip);
 		List<Document> movies = new ArrayList<>();
